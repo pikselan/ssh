@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Ssh;
+use App\Peraturan;
 
 class ViewSshController extends Controller
 {
@@ -40,7 +41,17 @@ class ViewSshController extends Controller
             $kode_sub_sub_rincian_objek = '';
         };
 
-        return view('view-ssh.index', ['list_periode'=>$list_periode, 'select_periode'=>$select_periode, 'list_kode_rincian_objek'=>$list_kode_rincian_objek, 'kode_sub_sub_rincian_objek'=>$kode_sub_sub_rincian_objek]);
+        $data_peraturan = Peraturan::first();
+
+        return view('view-ssh.index', 
+            [
+                'list_periode'=>$list_periode, 
+                'select_periode'=>$select_periode, 
+                'list_kode_rincian_objek'=>$list_kode_rincian_objek, 
+                'kode_sub_sub_rincian_objek'=>$kode_sub_sub_rincian_objek,
+                'data_peraturan'=>$data_peraturan
+            ]
+        );
     }
 
     public function getSubRincianObjek(Request $request){

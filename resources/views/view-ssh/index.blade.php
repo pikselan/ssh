@@ -80,6 +80,18 @@
                                                             @endif
                                                       </td>
                                                 </tr>
+                                                <tr>
+                                                      <td>
+                                                            <label for="kode_objek">Peraturan : </label>
+                                                            {{$data_peraturan->keterangan}} | 
+                                                            
+                                                            @foreach(json_decode($data_peraturan->file) as $file)
+                                                                  <a class="btn btn-default" href="{{ Storage::disk(config('voyager.storage.disk'))->url($file->download_link) ?: '' }}" target="_blank" style="text-decoration:none;">
+                                                                  Unduh
+                                                                  </a>
+                                                            @endforeach
+                                                      </td>
+                                                </tr>
                                           </table>
                                     </div>
                               </div>
@@ -234,6 +246,19 @@ $(document).ready(function(){
                         extend: 'pdfHtml5',
                         title: 'Data SSH Kab.Pesawaran'
                   } ),
+                  // {
+                  //       text: 'Reload',
+                  //       action: function ( e, dt, node, config ) {
+                  //             dt.ajax.reload();
+                  //       }
+                  // },
+                  // {
+                  //       text: 'Lihat Perbup',
+                  //       action: function ( e, dt, node, config ) {
+                  //             // dt.ajax.reload();
+                  //             window.open("https://www.geeksforgeeks.org", "_blank");
+                  //       }
+                  // }
             ],
             lengthMenu: [
                   [ 10, 25, 50, 100 ],

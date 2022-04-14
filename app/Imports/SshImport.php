@@ -45,6 +45,7 @@ class SshImport implements ToModel, WithHeadingRow
                 // 'zona' => $row['zona'],
                 // 'jenis_data' => $row['jenis_data'],
                 'periode' => $row['periode'],
+                // 'peraturan_id' => $row['peraturan_id'],
             ]);
         }
     }

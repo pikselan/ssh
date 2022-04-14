@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\SshController;
 use App\Http\Controllers\ViewSshController;
+use App\Http\Controllers\ViewHspkController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,13 +18,16 @@ use App\Http\Controllers\ViewSshController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    // return view('welcome');
+    // return redirect()->route('admin');
+    return redirect('admin');
 });
 
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
     
+    Route::get('view-hspk', [ViewHspkController::class, 'index'])->middleware('admin.user');
     Route::get('view-ssh', [ViewSshController::class, 'index'])->middleware('admin.user');
     Route::post('view-ssh', [ViewSshController::class, 'index'])->middleware('admin.user');
     Route::get('view-ssh/getdata', [ViewSshController::class, 'getData'])->name('getData')->middleware('admin.user');
