@@ -11,6 +11,14 @@ class ViewSshController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user()->hasRole('superadmin')) {
+            $admin = 'superadmin';
+        } elseif ($request->user()->hasRole('admin')) {
+            $admin = 'admin';
+        } else {
+            $admin = 'user';
+        }
+
         $req_select_periode = $request->get('select_periode');
         if(isset($req_select_periode)) {
             if(empty($req_select_periode)) {
@@ -20,7 +28,6 @@ class ViewSshController extends Controller
                 $select_periode = $req_select_periode;
             }
         } else {
-            // $b = Ssh::select('periode')->groupBy('periode')->orderByDesc('id')->first();
             $arr_select_periode = Ssh::select('periode')->groupBy('periode')->first();
             $select_periode = $arr_select_periode->periode;
         };
@@ -45,6 +52,7 @@ class ViewSshController extends Controller
 
         return view('view-ssh.index', 
             [
+                'admin'=>$admin,
                 'list_periode'=>$list_periode, 
                 'select_periode'=>$select_periode, 
                 'list_kode_rincian_objek'=>$list_kode_rincian_objek, 
@@ -137,36 +145,59 @@ class ViewSshController extends Controller
                 })
                 ->count();
 
-            $records = Ssh::orderBy($columnName,$columnSortOrder)
-                ->select("*")
-                // ->selectRaw("LPAD(produk_objek, 2, 0) as produk_objek")
-                // ->selectRaw("LPAD(produk_rincian_objek, 2, 0) as produk_rincian_objek")
-                // ->selectRaw("LPAD(produk_sub_rincian_objek, 2, 0) as produk_sub_rincian_objek")
-                // ->selectRaw("LPAD(produk_sub_sub_rincian_objek, 3, 0) as produk_sub_sub_rincian_objek")
-                // ->selectRaw("LPAD(produk_kode, 3, 0) as produk_kode")
-                // ->selectRaw("LPAD(belanja_objek, 2, 0) as belanja_objek")
-                // ->selectRaw("LPAD(belanja_rincian_objek, 2, 0) as belanja_rincian_objek")
-                // ->selectRaw("LPAD(belanja_sub_rincian_objek, 2, 0) as belanja_sub_rincian_objek")
-                // ->selectRaw("LPAD(belanja_kode, 3, 0) as belanja_kode")
-                ->selectRaw("CONCAT_WS('.',produk_akun,produk_kelompok,produk_jenis,LPAD(produk_objek, 2, 0),LPAD(produk_rincian_objek, 2, 0),LPAD(produk_sub_rincian_objek, 2, 0),LPAD(produk_sub_sub_rincian_objek, 3, 0),LPAD(produk_kode, 3, 0)) as kode_produk")
-                ->selectRaw("CONCAT_WS('.',belanja_akun,belanja_kelompok,belanja_jenis,LPAD(belanja_objek, 2, 0),LPAD(belanja_rincian_objek, 2, 0),LPAD(belanja_sub_rincian_objek, 2, 0),LPAD(belanja_kode, 3, 0)) as kode_belanja")
-                ->where('periode', 'like', '%' .$select_periode . '%')
-                ->where('produk_akun', array_key_exists(0 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[0] : '')
-                ->where('produk_kelompok', array_key_exists(1 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[1] : '')
-                ->where('produk_jenis', array_key_exists(2 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[2] : '')
-                ->where('produk_objek', array_key_exists(3 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[3] : '')
-                ->where('produk_rincian_objek', array_key_exists(4 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[4] : '')
-                ->where('produk_sub_rincian_objek', array_key_exists(5 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[5] : '')
-                ->where('produk_sub_sub_rincian_objek', array_key_exists(6 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[6] : '')
-                ->whereNotNull('produk_kode')
-                ->where(function ($query) use($searchValue) {
-                    $query->where('nama', 'like', '%' .$searchValue . '%')
-                        ->orWhere('spesifikasi', 'like', '%' .$searchValue . '%')
-                        ->orWhere('satuan', 'like', '%' .$searchValue . '%');
-                })
-                ->skip($start)
-                ->take($rowperpage)
-                ->get();
+                if($rowperpage == -1) {
+                    $records = Ssh::orderBy($columnName,$columnSortOrder)
+                        ->select("id", "nama", "spesifikasi", "satuan", "harga", "periode")
+                        ->selectRaw("CONCAT_WS('.',produk_akun,produk_kelompok,produk_jenis,LPAD(produk_objek, 2, 0),LPAD(produk_rincian_objek, 2, 0),LPAD(produk_sub_rincian_objek, 2, 0),LPAD(produk_sub_sub_rincian_objek, 3, 0),LPAD(produk_kode, 3, 0)) as kode_produk")
+                        ->selectRaw("CONCAT_WS('.',belanja_akun,belanja_kelompok,belanja_jenis,LPAD(belanja_objek, 2, 0),LPAD(belanja_rincian_objek, 2, 0),LPAD(belanja_sub_rincian_objek, 2, 0),LPAD(belanja_kode, 3, 0)) as kode_belanja")
+                        ->where('periode', 'like', '%' .$select_periode . '%')
+                        ->where('produk_akun', array_key_exists(0 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[0] : '')
+                        ->where('produk_kelompok', array_key_exists(1 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[1] : '')
+                        ->where('produk_jenis', array_key_exists(2 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[2] : '')
+                        ->where('produk_objek', array_key_exists(3 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[3] : '')
+                        ->where('produk_rincian_objek', array_key_exists(4 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[4] : '')
+                        ->where(function ($query) use($kode_sub_sub_rincian_objek) {
+                            $query->whereNull('produk_sub_rincian_objek')
+                                ->orWhere('produk_sub_rincian_objek', array_key_exists(5 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[5] : '');
+                        })
+                        ->where(function ($query) use($kode_sub_sub_rincian_objek) {
+                            $query->whereNull('produk_sub_sub_rincian_objek')
+                                ->orWhere('produk_sub_sub_rincian_objek', array_key_exists(6 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[6] : '');
+                        })
+                        ->where(function ($query) use($searchValue) {
+                            $query->where('nama', 'like', '%' .$searchValue . '%')
+                                ->orWhere('spesifikasi', 'like', '%' .$searchValue . '%')
+                                ->orWhere('satuan', 'like', '%' .$searchValue . '%');
+                        })
+                        ->get();
+                } else {
+                    $records = Ssh::orderBy($columnName,$columnSortOrder)
+                        ->select("id", "nama", "spesifikasi", "satuan", "harga", "periode")
+                        ->selectRaw("CONCAT_WS('.',produk_akun,produk_kelompok,produk_jenis,LPAD(produk_objek, 2, 0),LPAD(produk_rincian_objek, 2, 0),LPAD(produk_sub_rincian_objek, 2, 0),LPAD(produk_sub_sub_rincian_objek, 3, 0),LPAD(produk_kode, 3, 0)) as kode_produk")
+                        ->selectRaw("CONCAT_WS('.',belanja_akun,belanja_kelompok,belanja_jenis,LPAD(belanja_objek, 2, 0),LPAD(belanja_rincian_objek, 2, 0),LPAD(belanja_sub_rincian_objek, 2, 0),LPAD(belanja_kode, 3, 0)) as kode_belanja")
+                        ->where('periode', 'like', '%' .$select_periode . '%')
+                        ->where('produk_akun', array_key_exists(0 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[0] : '')
+                        ->where('produk_kelompok', array_key_exists(1 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[1] : '')
+                        ->where('produk_jenis', array_key_exists(2 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[2] : '')
+                        ->where('produk_objek', array_key_exists(3 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[3] : '')
+                        ->where('produk_rincian_objek', array_key_exists(4 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[4] : '')
+                        ->where(function ($query) use($kode_sub_sub_rincian_objek) {
+                            $query->whereNull('produk_sub_rincian_objek')
+                                ->orWhere('produk_sub_rincian_objek', array_key_exists(5 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[5] : '');
+                        })
+                        ->where(function ($query) use($kode_sub_sub_rincian_objek) {
+                            $query->whereNull('produk_sub_sub_rincian_objek')
+                                ->orWhere('produk_sub_sub_rincian_objek', array_key_exists(6 ,$kode_sub_sub_rincian_objek) ? $kode_sub_sub_rincian_objek[6] : '');
+                        })
+                        ->where(function ($query) use($searchValue) {
+                            $query->where('nama', 'like', '%' .$searchValue . '%')
+                                ->orWhere('spesifikasi', 'like', '%' .$searchValue . '%')
+                                ->orWhere('satuan', 'like', '%' .$searchValue . '%');
+                        })
+                        ->skip($start)
+                        ->take($rowperpage)
+                        ->get();
+                }
         } else {
             $totalRecordswithFilter = Ssh::select('count(*) as allcount')
                 ->where('periode', 'like', '%' .$select_periode . '%')
@@ -177,28 +208,42 @@ class ViewSshController extends Controller
                 })
                 ->count();
 
-            $records = Ssh::orderBy($columnName,$columnSortOrder)
-                ->select("*")
-                // ->selectRaw("LPAD(produk_objek, 2, 0) as produk_objek")
-                // ->selectRaw("LPAD(produk_rincian_objek, 2, 0) as produk_rincian_objek")
-                // ->selectRaw("LPAD(produk_sub_rincian_objek, 2, 0) as produk_sub_rincian_objek")
-                // ->selectRaw("LPAD(produk_sub_sub_rincian_objek, 3, 0) as produk_sub_sub_rincian_objek")
-                // ->selectRaw("LPAD(produk_kode, 3, 0) as produk_kode")
-                // ->selectRaw("LPAD(belanja_objek, 2, 0) as belanja_objek")
-                // ->selectRaw("LPAD(belanja_rincian_objek, 2, 0) as belanja_rincian_objek")
-                // ->selectRaw("LPAD(belanja_sub_rincian_objek, 2, 0) as belanja_sub_rincian_objek")
-                // ->selectRaw("LPAD(belanja_kode, 3, 0) as belanja_kode")
-                ->selectRaw("CONCAT_WS('.',produk_akun,produk_kelompok,produk_jenis,LPAD(produk_objek, 2, 0),LPAD(produk_rincian_objek, 2, 0),LPAD(produk_sub_rincian_objek, 2, 0),LPAD(produk_sub_sub_rincian_objek, 3, 0),LPAD(produk_kode, 3, 0)) as kode_produk")
-                ->selectRaw("CONCAT_WS('.',belanja_akun,belanja_kelompok,belanja_jenis,LPAD(belanja_objek, 2, 0),LPAD(belanja_rincian_objek, 2, 0),LPAD(belanja_sub_rincian_objek, 2, 0),LPAD(belanja_kode, 3, 0)) as kode_belanja")
-                ->where('periode', 'like', '%' .$select_periode . '%')
-                ->where(function ($query) use($searchValue) {
-                    $query->where('nama', 'like', '%' .$searchValue . '%')
-                        ->orWhere('spesifikasi', 'like', '%' .$searchValue . '%')
-                        ->orWhere('satuan', 'like', '%' .$searchValue . '%');
-                })
-                ->skip($start)
-                ->take($rowperpage)
-                ->get();
+            if($rowperpage == -1) {
+                $records = Ssh::orderBy($columnName,$columnSortOrder)
+                    ->select("*")
+                    // ->selectRaw("LPAD(produk_objek, 2, 0) as produk_objek")
+                    // ->selectRaw("LPAD(produk_rincian_objek, 2, 0) as produk_rincian_objek")
+                    // ->selectRaw("LPAD(produk_sub_rincian_objek, 2, 0) as produk_sub_rincian_objek")
+                    // ->selectRaw("LPAD(produk_sub_sub_rincian_objek, 3, 0) as produk_sub_sub_rincian_objek")
+                    // ->selectRaw("LPAD(produk_kode, 3, 0) as produk_kode")
+                    // ->selectRaw("LPAD(belanja_objek, 2, 0) as belanja_objek")
+                    // ->selectRaw("LPAD(belanja_rincian_objek, 2, 0) as belanja_rincian_objek")
+                    // ->selectRaw("LPAD(belanja_sub_rincian_objek, 2, 0) as belanja_sub_rincian_objek")
+                    // ->selectRaw("LPAD(belanja_kode, 3, 0) as belanja_kode")
+                    ->selectRaw("CONCAT_WS('.',produk_akun,produk_kelompok,produk_jenis,LPAD(produk_objek, 2, 0),LPAD(produk_rincian_objek, 2, 0),LPAD(produk_sub_rincian_objek, 2, 0),LPAD(produk_sub_sub_rincian_objek, 3, 0),LPAD(produk_kode, 3, 0)) as kode_produk")
+                    ->selectRaw("CONCAT_WS('.',belanja_akun,belanja_kelompok,belanja_jenis,LPAD(belanja_objek, 2, 0),LPAD(belanja_rincian_objek, 2, 0),LPAD(belanja_sub_rincian_objek, 2, 0),LPAD(belanja_kode, 3, 0)) as kode_belanja")
+                    ->where('periode', 'like', '%' .$select_periode . '%')
+                    ->where(function ($query) use($searchValue) {
+                        $query->where('nama', 'like', '%' .$searchValue . '%')
+                            ->orWhere('spesifikasi', 'like', '%' .$searchValue . '%')
+                            ->orWhere('satuan', 'like', '%' .$searchValue . '%');
+                    })
+                    ->get();
+            } else {
+                $records = Ssh::orderBy($columnName,$columnSortOrder)
+                    ->select("*")
+                    ->selectRaw("CONCAT_WS('.',produk_akun,produk_kelompok,produk_jenis,LPAD(produk_objek, 2, 0),LPAD(produk_rincian_objek, 2, 0),LPAD(produk_sub_rincian_objek, 2, 0),LPAD(produk_sub_sub_rincian_objek, 3, 0),LPAD(produk_kode, 3, 0)) as kode_produk")
+                    ->selectRaw("CONCAT_WS('.',belanja_akun,belanja_kelompok,belanja_jenis,LPAD(belanja_objek, 2, 0),LPAD(belanja_rincian_objek, 2, 0),LPAD(belanja_sub_rincian_objek, 2, 0),LPAD(belanja_kode, 3, 0)) as kode_belanja")
+                    ->where('periode', 'like', '%' .$select_periode . '%')
+                    ->where(function ($query) use($searchValue) {
+                        $query->where('nama', 'like', '%' .$searchValue . '%')
+                            ->orWhere('spesifikasi', 'like', '%' .$searchValue . '%')
+                            ->orWhere('satuan', 'like', '%' .$searchValue . '%');
+                    })
+                    ->skip($start)
+                    ->take($rowperpage)
+                    ->get();
+            }
         }
 
         $data_arr = array();

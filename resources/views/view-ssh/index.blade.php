@@ -1,6 +1,15 @@
 @extends('voyager::master')
 
 @section('content')
+      <div id="data-loader" class="data-loader hidden">
+            <?php $admin_loader_img = Voyager::setting('admin.loader', ''); ?>
+            @if($admin_loader_img == '')
+                  <img src="{{ voyager_asset('images/logo-icon.png') }}" alt="Data Loader">
+            @else
+                  <img src="{{ Voyager::image($admin_loader_img) }}" alt="Data Loader">
+            @endif
+      </div>
+
       <div class="page-content browse container-fluid">
             <h1>
                   <?php $admin_logo_img = Voyager::setting('admin.icon_image', ''); ?>
@@ -130,6 +139,31 @@
 <!-- Datatable CSS -->
 <!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.11.5/datatables.min.css"/> -->
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/jszip-2.5.0/dt-1.11.5/b-2.2.2/b-html5-2.2.2/datatables.min.css"/>
+<style>
+.data-loader {
+      background: rgba(255, 255, 255, 0.6);
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+      z-index: 99;
+}
+.data-loader.hidden {
+      display: none;
+}
+.data-loader img {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-left: -50px;
+      margin-right: -50px;
+      -webkit-animation: spin 1s linear infinite;
+      animation: spin 1s linear infinite;
+}
+</style>
 @stop
 
 @section('javascript')
@@ -178,27 +212,10 @@ function format ( d ) {
 }
 
 $(document).ready(function(){
-      var buttonCommon = {
-            exportOptions: {
-                  modifier : {
-                        page : 'all', // 'all', 'current'
-                        search : 'none', // 'none', 'applied', 'removed'
-                        selected: null
-                  },
-                  columns: [ 2, 3, 4, 5, 6, 7 ],
-                  format: {
-                        body: function ( data, row, column, node ) {
-                              return column === 5 ?
-                                    data.replace( /[.]/g, '' ) :
-                                    data;
-                        }
-                  }
-            }
-      };
-
       var table = $('#empTable').DataTable({
             processing: true,
             serverSide: true,
+            searchDelay: 2000,
             ajax: "{{route('getData')}}?select_periode={{$select_periode}}&kode_sub_sub_rincian_objek={{$kode_sub_sub_rincian_objek}}",
             columns: [
                   {
@@ -238,32 +255,57 @@ $(document).ready(function(){
             dom: 'Bfrtip',
             buttons: [
                   'pageLength',
-                  $.extend( true, {}, buttonCommon, {
+                  $.extend( true, {}, {
                         extend: 'excelHtml5',
-                        title: 'Data SSH Kab.Pesawaran'
+                        title: 'Data SSH dan SBM Kabupaten Pesawaran',
+                        messageTop: 'Data yang ditampilkan merupakan versi {{$select_periode}}',
+                        exportOptions: {
+                              modifier : {
+                                    // DataTables core
+                                    order : 'current',  // 'current', 'applied', 'index',  'original'
+                                    page : 'all',      // 'all',     'current'
+                                    search : 'applied'     // 'none',    'applied', 'removed'
+                              },
+                              columns: [ 2, 3, 4, 5, 6, 7 ],
+                              format: {
+                                    body: function ( data, row, column, node ) {
+                                          return column === 5 ?
+                                                data.replace( /[.]/g, '' ) :
+                                                data;
+                                    }
+                              }
+                        }
                   } ),
-                  $.extend( true, {}, buttonCommon, {
+                  $.extend( true, {}, {
                         extend: 'pdfHtml5',
-                        title: 'Data SSH Kab.Pesawaran'
+                        // download: 'open',
+                        orientation: 'landscape',
+                        pageSize: 'LEGAL',
+                        title: 'Data SSH dan SBM Kabupaten Pesawaran',
+                        messageTop: 'Data yang ditampilkan merupakan versi {{$select_periode}}',
+                        exportOptions: {
+                              modifier : {
+                                    // DataTables core
+                                    order : 'current',  // 'current', 'applied', 'index',  'original'
+                                    page : 'all',      // 'all',     'current'
+                                    search : 'applied'     // 'none',    'applied', 'removed'
+                              },
+                              columns: [ 2, 3, 4, 5, 6, 7 ],
+                        }
                   } ),
-                  // {
-                  //       text: 'Reload',
-                  //       action: function ( e, dt, node, config ) {
-                  //             dt.ajax.reload();
-                  //       }
-                  // },
-                  // {
-                  //       text: 'Lihat Perbup',
-                  //       action: function ( e, dt, node, config ) {
-                  //             // dt.ajax.reload();
-                  //             window.open("https://www.geeksforgeeks.org", "_blank");
-                  //       }
-                  // }
             ],
-            lengthMenu: [
-                  [ 10, 25, 50, 100 ],
-                  [ '10 baris', '25 baris', '50 baris', '100 baris' ]
-            ],
+
+            @if($admin == 'superadmin' || $admin == 'admin' )
+                  lengthMenu: [
+                        [ 10, 25, 50, 100, -1 ],
+                        [ '10 baris', '25 baris', '50 baris', '100 baris', 'Tampilkan Semua' ]
+                  ],
+            @else
+                  lengthMenu: [
+                        [ 10, 25, 50, 100 ],
+                        [ '10 baris', '25 baris', '50 baris', '100 baris' ]
+                  ],
+            @endif
       });
 
       // Add event listener for opening and closing details
@@ -288,23 +330,31 @@ $(document).ready(function(){
             $('#kode_sub_rincian_objek').find('option').not(':first').remove();
             $('#kode_sub_sub_rincian_objek').find('option').not(':first').remove();
             $.ajax({
-            url: '{{route('getSubRincianObjek')}}?select_periode={{$select_periode}}&select_rincian_objek='+id,
-            type: 'get',
-            dataType: 'json',
-            success: function(response){
-                        var len = 0;
-                              if(response['data'] != null){
-                              len = response['data'].length;
-                        }
-                        if(len > 0){
-                              for(var i=0; i<len; i++){
-                                    var kode_produk = response['data'][i].kode_produk;
-                                    var nama = response['data'][i].nama;
-                                    var option = "<option value='"+kode_produk+"'>"+kode_produk+" - "+nama+"</option>";
-                                    $("#kode_sub_rincian_objek").append(option); 
+                  url: '{{route('getSubRincianObjek')}}?select_periode={{$select_periode}}&select_rincian_objek='+id,
+                  type: 'get',
+                  dataType: 'json',
+                  beforeSend: function(){
+                        $('#data-loader').removeClass('hidden')
+                  },
+                  success: function(response){
+                        setTimeout(function() {
+                              var len = 0;
+                                    if(response['data'] != null){
+                                    len = response['data'].length;
                               }
-                        }
-                  }
+                              if(len > 0){
+                                    for(var i=0; i<len; i++){
+                                          var kode_produk = response['data'][i].kode_produk;
+                                          var nama = response['data'][i].nama;
+                                          var option = "<option value='"+kode_produk+"'>"+kode_produk+" - "+nama+"</option>";
+                                          $("#kode_sub_rincian_objek").append(option); 
+                                    }
+                              }
+                        }, 500);
+                  },
+                  complete: function () {
+                        $('#data-loader').addClass('hidden')
+                  },
             });
       });
       
@@ -312,23 +362,31 @@ $(document).ready(function(){
             var id = $(this).val();
             $('#kode_sub_sub_rincian_objek').find('option').not(':first').remove();
             $.ajax({
-            url: '{{route('getSubSubRincianObjek')}}?select_periode={{$select_periode}}&select_sub_rincian_objek='+id,
-            type: 'get',
-            dataType: 'json',
-            success: function(response){
-                        var len = 0;
-                              if(response['data'] != null){
-                              len = response['data'].length;
-                        }
-                        if(len > 0){
-                              for(var i=0; i<len; i++){
-                                    var kode_produk = response['data'][i].kode_produk;
-                                    var nama = response['data'][i].nama;
-                                    var option = "<option value='"+kode_produk+"'>"+kode_produk+" - "+nama+"</option>";
-                                    $("#kode_sub_sub_rincian_objek").append(option); 
+                  url: '{{route('getSubSubRincianObjek')}}?select_periode={{$select_periode}}&select_sub_rincian_objek='+id,
+                  type: 'get',
+                  dataType: 'json',
+                  beforeSend: function(){
+                        $('#data-loader').removeClass('hidden')
+                  },
+                  success: function(response){
+                        setTimeout(function() {
+                              var len = 0;
+                                    if(response['data'] != null){
+                                    len = response['data'].length;
                               }
-                        }
-                  }
+                              if(len > 0){
+                                    for(var i=0; i<len; i++){
+                                          var kode_produk = response['data'][i].kode_produk;
+                                          var nama = response['data'][i].nama;
+                                          var option = "<option value='"+kode_produk+"'>"+kode_produk+" - "+nama+"</option>";
+                                          $("#kode_sub_sub_rincian_objek").append(option); 
+                                    }
+                              }
+                        }, 500);
+                  },
+                  complete: function () {
+                        $('#data-loader').addClass('hidden')
+                  },
             });
       });
 });
