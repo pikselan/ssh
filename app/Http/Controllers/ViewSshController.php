@@ -22,13 +22,14 @@ class ViewSshController extends Controller
         $req_select_periode = $request->get('select_periode');
         if(isset($req_select_periode)) {
             if(empty($req_select_periode)) {
-                $arr_select_periode = Ssh::select('periode')->groupBy('periode')->first();
+                $arr_select_periode = Ssh::select('id','periode')->groupBy('periode')->orderBy('id', 'DESC')->first();
                 $select_periode = $arr_select_periode->periode;
             } else {
                 $select_periode = $req_select_periode;
             }
         } else {
-            $arr_select_periode = Ssh::select('periode')->groupBy('periode')->first();
+            $arr_select_periode = Ssh::select('id','periode')->groupBy('periode')->orderBy('id', 'DESC')->first();
+            // $arr_select_periode = DB::select('select id, periode from sshes group by periode order by id desc limit 1', [1]);
             $select_periode = $arr_select_periode->periode;
         };
         
@@ -48,7 +49,7 @@ class ViewSshController extends Controller
             $kode_sub_sub_rincian_objek = '';
         };
 
-        $data_peraturan = Peraturan::first();
+        $data_peraturan = Peraturan::orderBy('id', 'DESC')->first();
 
         return view('view-ssh.index', 
             [
