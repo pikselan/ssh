@@ -20,7 +20,7 @@
                 <div class="dimmer" style="background: linear-gradient(360deg,#ffffff00,rgb(137 137 137 / 46%) 34%,rgb(0 0 0 / 65%));"></div>
                 <div class="panel-content" style="">
                     <img src="{{ $user_avatar }}" class="avatar" alt="{{ Auth::user()->name }} avatar">
-                    <h4 style="font-weight: 600; font-size: initial;">{{ ucwords(Auth::user()->name) }}</h4>
+                    <h4 style="font-weight: 500; font-size: smaller;">{{ ucwords(Auth::user()->name) }}</h4>
                     <p>{{ Auth::user()->email }}</p>
 
                     <a href="{{ route('voyager.profile') }}" class="btn btn-primary">{{ __('voyager::generic.profile') }}</a>
