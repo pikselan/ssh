@@ -41,8 +41,10 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('view-asb/getdata', [ViewAsbController::class, 'getData'])->name('getDataAsb')->middleware('admin.user');
 
     Route::get('view-hspk', [ViewHspkController::class, 'index'])->middleware('admin.user');
+    Route::get('view-hspk/getdata', [ViewHspkController::class, 'getData'])->name('getDataHspk')->middleware('admin.user');
 });
 
 // Route::post('/admin/ssh/import', 'SshController@import')->middleware('admin.user');
 Route::post('/admin/ssh/import', [SshController::class, 'import'])->middleware('admin.user');
 Route::post('/admin/asbs/import', [AsbController::class, 'import'])->middleware('admin.user');
+Route::post('/admin/hspk/import', [HspkController::class, 'import'])->middleware('admin.user');

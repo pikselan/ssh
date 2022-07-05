@@ -134,6 +134,14 @@ function numberWithCommas(x) {
       return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ".");
 }
 
+function nullToString(x) {
+      if(x == null) {
+            return " ";
+      } else {
+            return x;
+      }
+}
+
 function format ( d ) {
       // `d` is the original data object for the row
       Object.keys(d).forEach(
@@ -142,7 +150,7 @@ function format ( d ) {
 
       var listSub = '';
       d.sub_turunan.forEach((item, index) => {
-         listSub += '<tr><td></td><td></td><td>' + item.nama + '</td><td>' + numberWithCommas(item.nilai) + '</td></tr>';
+         listSub += '<tr><td></td><td></td><td>' + nullToString(item.nama) + '</td><td>' + numberWithCommas(nullToString(item.nilai)) + '</td></tr>';
       });
 
       return '<table class="table table-hover" style="width:100%;">'+
@@ -156,9 +164,10 @@ function format ( d ) {
             '</thead>'+
             '<tbody>'
             +listSub+
-            '<tr>'+
-                  '<td colspan=4 style="font-size: smaller;font-weight: 300;">Periode '+d.periode+'</td>'+
-            '</tr>'+
+            '<tr><td colspan=9></td></tr>'+
+            // '<tr>'+
+            //       '<td colspan=9 style="font-size: smaller;font-weight: 300;">Periode '+d.periode+'</td>'+
+            // '</tr>'+
             '</tbody>'+
       '</table>';
 }
@@ -220,8 +229,8 @@ $(document).ready(function(){
                                     newBody.push(
                                        [
                                           {text: '', style:''},
-                                          {text: sub.nama, style:''},
-                                          {text: numberWithCommas(sub.nilai), style:''},
+                                          {text: nullToString(sub.nama), style:''},
+                                          {text: numberWithCommas(nullToString(sub.nilai)), style:''},
                                        ]
                                     );
                                  })

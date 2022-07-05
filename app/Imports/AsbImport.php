@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\HasReferencesToOtherSheets;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 
-function IsNullOrEmptyString($str){
+function IsNotNullOrEmptyString($str){
     return (isset($str) || trim($str) !== '');
 }
 
@@ -36,7 +36,7 @@ class AsbSheetImport implements ToModel, WithCalculatedFormulas, WithHeadingRow
 {
     public function model(array $row)
     {
-        if (IsNullOrEmptyString($row['no'])) {
+        if (IsNotNullOrEmptyString($row['no'])) {
             return new Asb([
                 // 'peraturan_id' => $row['peraturan_id'],
                 'kode' => $row['no'],

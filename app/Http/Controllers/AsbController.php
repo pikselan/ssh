@@ -12,7 +12,7 @@ use App\Imports\AsbImport;
 
 use Session;
 
-function IsNullOrEmptyString($str){
+function IsNotNullOrEmptyString($str){
     return (isset($str) || trim($str) !== '' || $str !== NULL);
 }
 
@@ -42,7 +42,7 @@ class AsbController extends Controller
         $kode_kepala = NULL;
         $nomor_turunan = 0;
         foreach($data['ASB'] as $row) {
-            if (IsNullOrEmptyString($row['no'])) {
+            if (IsNotNullOrEmptyString($row['no'])) {
                 $kode_kepala = $row['no'];
                 $nomor_turunan = 0;
                 $arr[] = [

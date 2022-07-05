@@ -1,6 +1,9 @@
 /node_modules
 /public/hot
 /public/storage
+/public/file_ssh/*
+/public/file_asb/*
+/public/file_hspk/*
 /storage/*.key
 /vendor
 .env
